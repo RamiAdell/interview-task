@@ -1,0 +1,14 @@
+# Django Framework
+Django==5.2.8
+djangorestframework==3.15.2
+django-cors-headers==4.6.0
+
+# JWT Authentication
+djangorestframework-simplejwt==5.4.0
+PyJWT==2.10.1
+
+# Database
+mysqlclient==2.2.7
+
+# API Documentation
+drf-spectacular==0.27.0
