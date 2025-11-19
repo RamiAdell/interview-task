@@ -6,6 +6,7 @@ from .models import Product
 from .serializers import ProductSerializer, ProductListSerializer
 from ecommerce.permissions import ViewerPermission
 from ecommerce.pagination import ProductPagination
+from django.db import transaction
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -48,3 +49,26 @@ class ProductViewSet(viewsets.ModelViewSet):
         product.save(update_fields=['is_active'])
         
         return Response({'detail': 'Product deactivated successfully'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'])
+    def soft_delete(self, request):
+        """Soft-delete multiple products by `ids` (PATCH).
+
+        Body: {"ids": [1, 2, 3]}
+
+        Returns: {"deactivated": N}
+        """
+        ids = request.data.get('ids')
+        if not isinstance(ids, list) or not ids:
+            return Response({'detail': '`ids` (non-empty list) is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            ids = [int(i) for i in ids]
+        except (TypeError, ValueError):
+            return Response({'detail': '`ids` must be a list of integers.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        qs = self.get_queryset().filter(id__in=ids)
+        with transaction.atomic():
+            updated = qs.update(is_active=False)
+
+        return Response({'deactivated': updated}, status=status.HTTP_200_OK)
